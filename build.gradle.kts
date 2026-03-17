@@ -14,17 +14,19 @@ repositories {
     mavenCentral()
 }
 
+val junitVersion = "5.12.2"
+
 testing {
     suites {
         val test by getting(JvmTestSuite::class) {
-            useJUnitJupiter("5.10.1")
+            useJUnitJupiter(junitVersion)
             dependencies {
-                implementation("org.mockito:mockito-core:5.8.0")
+                implementation("org.mockito:mockito-core:5.18.0")
             }
         }
 
         val integrationTest by registering(JvmTestSuite::class) {
-            useJUnitJupiter("5.10.1")
+            useJUnitJupiter(junitVersion)
             dependencies {
                 implementation(project())
             }
