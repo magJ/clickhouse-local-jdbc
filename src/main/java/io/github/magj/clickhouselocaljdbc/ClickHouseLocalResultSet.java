@@ -66,7 +66,7 @@ public class ClickHouseLocalResultSet implements ResultSet {
             throw new SQLException("Column index out of range: " + columnIndex);
         }
         String value = row[columnIndex - 1];
-        if ("\\N".equals(value)) {
+        if (value == null) {
             lastWasNull = true;
             return null;
         }

@@ -42,11 +42,7 @@ public class ClickHouseLocalStatement implements Statement {
     @Override
     public int executeUpdate(String sql) throws SQLException {
         checkClosed();
-        List<String> cmd = new ArrayList<>();
-        cmd.add(clickhouseLocalPath);
-        cmd.add("--query");
-        cmd.add(sql);
-        runProcessNoOutput(cmd);
+        executeQuery(sql);
         lastResultSet = null;
         updateCount = 0;
         return 0;
@@ -55,16 +51,9 @@ public class ClickHouseLocalStatement implements Statement {
     @Override
     public boolean execute(String sql) throws SQLException {
         checkClosed();
-        List<String> cmd = new ArrayList<>();
-        cmd.add(clickhouseLocalPath);
-        cmd.add("--query");
-        cmd.add(sql);
-        cmd.add("--output-format");
-        cmd.add("TabSeparatedWithNamesAndTypes");
-        String output = runProcess(cmd);
-        ClickHouseLocalResultSet rs = parseTabSeparatedOutput(output);
-        if (rs.getColumnCount() > 0) {
-            lastResultSet = rs;
+        executeQuery(sql);
+        ClickHouseLocalResultSet rs = (ClickHouseLocalResultSet) lastResultSet;
+        if (rs != null && rs.getColumnCount() > 0) {
             updateCount = -1;
             return true;
         } else {
@@ -103,23 +92,6 @@ public class ClickHouseLocalStatement implements Statement {
         }
     }
 
-    protected void runProcessNoOutput(List<String> command) throws SQLException {
-        ProcessBuilder pb = new ProcessBuilder(command);
-        if (workingDirectory != null) {
-            pb.directory(new File(workingDirectory));
-        }
-        try {
-            Process process = pb.start();
-            String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new SQLException("clickhouse-local failed: " + stderr);
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new SQLException("Failed to run clickhouse-local: " + e.getMessage(), e);
-        }
-    }
-
     public ClickHouseLocalResultSet parseTabSeparatedOutput(String output) {
         String[] lines = output.split("\n", -1);
         if (lines.length < 2) {
@@ -130,11 +102,46 @@ public class ClickHouseLocalStatement implements Statement {
         List<String[]> rows = new ArrayList<>();
         for (int i = 2; i < lines.length; i++) {
             if (!lines[i].isEmpty()) {
-                rows.add(lines[i].split("\t", -1));
+                String[] rawFields = lines[i].split("\t", -1);
+                String[] fields = new String[rawFields.length];
+                for (int j = 0; j < rawFields.length; j++) {
+                    fields[j] = unescapeTabSeparatedValue(rawFields[j]);
+                }
+                rows.add(fields);
             }
         }
         return new ClickHouseLocalResultSet(
             Arrays.asList(columnNames), Arrays.asList(columnTypes), rows);
+    }
+
+    private static String unescapeTabSeparatedValue(String s) {
+        if ("\\N".equals(s)) {
+            return null;
+        }
+        if (s.indexOf('\\') == -1) {
+            return s;
+        }
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                char next = s.charAt(++i);
+                switch (next) {
+                    case 't': sb.append('\t'); break;
+                    case 'n': sb.append('\n'); break;
+                    case 'r': sb.append('\r'); break;
+                    case '\\': sb.append('\\'); break;
+                    case '0': sb.append('\0'); break;
+                    case 'b': sb.append('\b'); break;
+                    case 'f': sb.append('\f'); break;
+                    case 'a': sb.append('\u0007'); break;
+                    default: sb.append('\\'); sb.append(next); break;
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     private ClickHouseLocalResultSet emptyResultSet() {

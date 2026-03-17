@@ -23,7 +23,7 @@ class ClickHouseLocalResultSetTest {
         List<String[]> rows = Arrays.asList(
             new String[]{"1", "Alice", "9.5", "1"},
             new String[]{"2", "Bob", "7.2", "0"},
-            new String[]{"3", "\\N", "\\N", "1"}
+            new String[]{"3", null, null, "1"}
         );
         rs = new ClickHouseLocalResultSet(cols, types, rows);
     }

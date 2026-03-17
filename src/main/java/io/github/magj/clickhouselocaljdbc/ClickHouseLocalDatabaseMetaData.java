@@ -1,5 +1,7 @@
 package io.github.magj.clickhouselocaljdbc;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,7 +21,15 @@ public class ClickHouseLocalDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public String getDatabaseProductVersion() throws SQLException {
-        return "unknown";
+        try {
+            Process process = new ProcessBuilder(connection.getClickhouseLocalPath(), "--version")
+                    .start();
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+            process.waitFor();
+            return output;
+        } catch (IOException | InterruptedException e) {
+            return "unknown";
+        }
     }
 
     @Override
@@ -29,17 +39,17 @@ public class ClickHouseLocalDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public String getDriverVersion() throws SQLException {
-        return "1.0";
+        return ClickHouseLocalDriver.DRIVER_VERSION;
     }
 
     @Override
     public int getDriverMajorVersion() {
-        return 1;
+        return ClickHouseLocalDriver.DRIVER_MAJOR_VERSION;
     }
 
     @Override
     public int getDriverMinorVersion() {
-        return 0;
+        return ClickHouseLocalDriver.DRIVER_MINOR_VERSION;
     }
 
     @Override

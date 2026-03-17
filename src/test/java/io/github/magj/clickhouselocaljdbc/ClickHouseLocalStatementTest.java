@@ -117,4 +117,29 @@ class ClickHouseLocalStatementTest {
         while (rs.next()) count++;
         assertEquals(3, count);
     }
+
+    @Test
+    void parseTabSeparatedOutputUnescapesTabsAndNewlines() throws SQLException {
+        // ClickHouse TSV escapes embedded tabs as \t and newlines as \n within field values
+        String output = "id\ttext\n" +
+                        "Int32\tString\n" +
+                        "1\thello\\tworld\n" +
+                        "2\thello\\nworld\n";
+        ClickHouseLocalResultSet rs = statement.parseTabSeparatedOutput(output);
+        assertTrue(rs.next());
+        assertEquals(1, rs.getInt(1));
+        assertEquals("hello\tworld", rs.getString(2));
+        assertTrue(rs.next());
+        assertEquals(2, rs.getInt(1));
+        assertEquals("hello\nworld", rs.getString(2));
+        assertFalse(rs.next());
+    }
+
+    @Test
+    void parseTabSeparatedOutputUnescapesBackslash() throws SQLException {
+        String output = "path\nString\nc:\\\\users\n";
+        ClickHouseLocalResultSet rs = statement.parseTabSeparatedOutput(output);
+        assertTrue(rs.next());
+        assertEquals("c:\\users", rs.getString(1));
+    }
 }

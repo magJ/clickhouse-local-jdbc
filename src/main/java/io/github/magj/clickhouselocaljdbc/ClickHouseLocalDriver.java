@@ -7,6 +7,9 @@ import java.util.logging.Logger;
 public class ClickHouseLocalDriver implements Driver {
 
     static final String URL_PREFIX = "jdbc:clickhouse-local:";
+    static final int DRIVER_MAJOR_VERSION = 1;
+    static final int DRIVER_MINOR_VERSION = 0;
+    static final String DRIVER_VERSION = DRIVER_MAJOR_VERSION + "." + DRIVER_MINOR_VERSION;
 
     static {
         try {
@@ -42,12 +45,12 @@ public class ClickHouseLocalDriver implements Driver {
 
     @Override
     public int getMajorVersion() {
-        return 1;
+        return DRIVER_MAJOR_VERSION;
     }
 
     @Override
     public int getMinorVersion() {
-        return 0;
+        return DRIVER_MINOR_VERSION;
     }
 
     @Override
