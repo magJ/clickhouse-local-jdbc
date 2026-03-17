@@ -4,18 +4,16 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement implements PreparedStatement {
 
     private final String originalSql;
     private final Map<Integer, String> parameters = new HashMap<>();
-    private final Map<Integer, String> stringParamValues = new HashMap<>();
 
     public ClickHouseLocalPreparedStatement(ClickHouseLocalConnection connection, String sql) {
         super(connection);
@@ -50,27 +48,19 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
         return result.toString();
     }
 
-    protected List<String> buildParamArgs() {
-        List<String> args = new ArrayList<>();
-        for (Map.Entry<Integer, String> entry : stringParamValues.entrySet()) {
-            args.add("--param_p" + entry.getKey() + "=" + entry.getValue());
-        }
-        return args;
-    }
-
     @Override
     public ResultSet executeQuery() throws SQLException {
-        return executeQueryWithParams(buildSql(), buildParamArgs());
+        return super.executeQuery(buildSql());
     }
 
     @Override
     public int executeUpdate() throws SQLException {
-        return executeUpdateWithParams(buildSql(), buildParamArgs());
+        return super.executeUpdate(buildSql());
     }
 
     @Override
     public boolean execute() throws SQLException {
-        return executeWithParams(buildSql(), buildParamArgs());
+        return super.execute(buildSql());
     }
 
     @Override
@@ -126,10 +116,14 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
     public void setString(int parameterIndex, String x) throws SQLException {
         if (x == null) {
             parameters.put(parameterIndex, "NULL");
-            stringParamValues.remove(parameterIndex);
         } else {
-            parameters.put(parameterIndex, "{p" + parameterIndex + ":String}");
-            stringParamValues.put(parameterIndex, x);
+            byte[] bytes = x.getBytes(StandardCharsets.UTF_8);
+            StringBuilder hex = new StringBuilder(bytes.length * 2);
+            for (byte b : bytes) {
+                hex.append(Character.forDigit((b >> 4) & 0xF, 16));
+                hex.append(Character.forDigit(b & 0xF, 16));
+            }
+            parameters.put(parameterIndex, "unhex('" + hex + "')");
         }
     }
 
@@ -170,8 +164,8 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
         throw new SQLFeatureNotSupportedException("setAsciiStream not supported");
     }
 
+    @Deprecated
     @Override
-    @SuppressWarnings("deprecation")
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
         throw new SQLFeatureNotSupportedException("setUnicodeStream not supported");
     }
@@ -184,7 +178,6 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
     @Override
     public void clearParameters() throws SQLException {
         parameters.clear();
-        stringParamValues.clear();
     }
 
     @Override

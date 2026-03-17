@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,8 +27,7 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlWithStringParameter() throws SQLException {
         var ps = prepare("SELECT * FROM t WHERE name = ?");
         ps.setString(1, "Alice");
-        assertEquals("SELECT * FROM t WHERE name = {p1:String}", ps.buildSql());
-        assertEquals(List.of("--param_p1=Alice"), ps.buildParamArgs());
+        assertEquals("SELECT * FROM t WHERE name = unhex('416c696365')", ps.buildSql());
     }
 
     @Test
@@ -76,23 +74,20 @@ class ClickHouseLocalPreparedStatementTest {
         var ps = prepare("SELECT ?");
         ps.setString(1, null);
         assertEquals("SELECT NULL", ps.buildSql());
-        assertEquals(List.of(), ps.buildParamArgs());
     }
 
     @Test
     void buildSqlEscapesSingleQuoteInString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setString(1, "it's");
-        assertEquals("SELECT {p1:String}", ps.buildSql());
-        assertEquals(List.of("--param_p1=it's"), ps.buildParamArgs());
+        assertEquals("SELECT unhex('69742773')", ps.buildSql());
     }
 
     @Test
     void buildSqlEscapesBackslashInString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setString(1, "back\\slash");
-        assertEquals("SELECT {p1:String}", ps.buildSql());
-        assertEquals(List.of("--param_p1=back\\slash"), ps.buildParamArgs());
+        assertEquals("SELECT unhex('6261636b5c736c617368')", ps.buildSql());
     }
 
     @Test
@@ -101,8 +96,7 @@ class ClickHouseLocalPreparedStatementTest {
         ps.setInt(1, 1);
         ps.setString(2, "hello");
         ps.setDouble(3, 1.5);
-        assertEquals("INSERT INTO t (a, b, c) VALUES (1, {p2:String}, 1.5)", ps.buildSql());
-        assertEquals(List.of("--param_p2=hello"), ps.buildParamArgs());
+        assertEquals("INSERT INTO t (a, b, c) VALUES (1, unhex('68656c6c6f'), 1.5)", ps.buildSql());
     }
 
     @Test
@@ -126,7 +120,6 @@ class ClickHouseLocalPreparedStatementTest {
         ps.setString(2, "hello");
         ps.clearParameters();
         assertThrows(SQLException.class, ps::buildSql);
-        assertEquals(List.of(), ps.buildParamArgs());
     }
 
     @Test
@@ -140,8 +133,7 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlWithObjectString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setObject(1, "world");
-        assertEquals("SELECT {p1:String}", ps.buildSql());
-        assertEquals(List.of("--param_p1=world"), ps.buildParamArgs());
+        assertEquals("SELECT unhex('776f726c64')", ps.buildSql());
     }
 
     @Test

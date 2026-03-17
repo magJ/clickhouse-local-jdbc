@@ -168,16 +168,16 @@ public class ClickHouseLocalResultSet implements ResultSet {
         return getDouble(findColumn(columnLabel));
     }
 
+    @Deprecated
     @Override
-    @SuppressWarnings("deprecation")
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
         BigDecimal bd = getBigDecimal(columnIndex);
         if (bd == null) return null;
         return bd.setScale(scale, java.math.RoundingMode.HALF_UP);
     }
 
+    @Deprecated
     @Override
-    @SuppressWarnings("deprecation")
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
         return getBigDecimal(findColumn(columnLabel), scale);
     }
@@ -1029,14 +1029,14 @@ public class ClickHouseLocalResultSet implements ResultSet {
         throw new SQLFeatureNotSupportedException("getAsciiStream not supported");
     }
 
+    @Deprecated
     @Override
-    @SuppressWarnings("deprecation")
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
         throw new SQLFeatureNotSupportedException("getUnicodeStream not supported");
     }
 
+    @Deprecated
     @Override
-    @SuppressWarnings("deprecation")
     public InputStream getUnicodeStream(String columnLabel) throws SQLException {
         throw new SQLFeatureNotSupportedException("getUnicodeStream not supported");
     }
