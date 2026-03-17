@@ -5,14 +5,17 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement implements PreparedStatement {
 
     private final String originalSql;
     private final Map<Integer, String> parameters = new HashMap<>();
+    private final Map<Integer, String> stringParamValues = new HashMap<>();
 
     public ClickHouseLocalPreparedStatement(ClickHouseLocalConnection connection, String sql) {
         super(connection);
@@ -47,19 +50,27 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
         return result.toString();
     }
 
+    protected List<String> buildParamArgs() {
+        List<String> args = new ArrayList<>();
+        for (Map.Entry<Integer, String> entry : stringParamValues.entrySet()) {
+            args.add("--param_p" + entry.getKey() + "=" + entry.getValue());
+        }
+        return args;
+    }
+
     @Override
     public ResultSet executeQuery() throws SQLException {
-        return super.executeQuery(buildSql());
+        return executeQueryWithParams(buildSql(), buildParamArgs());
     }
 
     @Override
     public int executeUpdate() throws SQLException {
-        return super.executeUpdate(buildSql());
+        return executeUpdateWithParams(buildSql(), buildParamArgs());
     }
 
     @Override
     public boolean execute() throws SQLException {
-        return super.execute(buildSql());
+        return executeWithParams(buildSql(), buildParamArgs());
     }
 
     @Override
@@ -115,8 +126,10 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
     public void setString(int parameterIndex, String x) throws SQLException {
         if (x == null) {
             parameters.put(parameterIndex, "NULL");
+            stringParamValues.remove(parameterIndex);
         } else {
-            parameters.put(parameterIndex, "'" + x.replace("\\", "\\\\").replace("'", "''") + "'");
+            parameters.put(parameterIndex, "{p" + parameterIndex + ":String}");
+            stringParamValues.put(parameterIndex, x);
         }
     }
 
@@ -171,6 +184,7 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
     @Override
     public void clearParameters() throws SQLException {
         parameters.clear();
+        stringParamValues.clear();
     }
 
     @Override

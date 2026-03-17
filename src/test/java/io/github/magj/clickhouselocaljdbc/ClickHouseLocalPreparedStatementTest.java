@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +28,8 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlWithStringParameter() throws SQLException {
         var ps = prepare("SELECT * FROM t WHERE name = ?");
         ps.setString(1, "Alice");
-        assertEquals("SELECT * FROM t WHERE name = 'Alice'", ps.buildSql());
+        assertEquals("SELECT * FROM t WHERE name = {p1:String}", ps.buildSql());
+        assertEquals(List.of("--param_p1=Alice"), ps.buildParamArgs());
     }
 
     @Test
@@ -74,20 +76,23 @@ class ClickHouseLocalPreparedStatementTest {
         var ps = prepare("SELECT ?");
         ps.setString(1, null);
         assertEquals("SELECT NULL", ps.buildSql());
+        assertEquals(List.of(), ps.buildParamArgs());
     }
 
     @Test
     void buildSqlEscapesSingleQuoteInString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setString(1, "it's");
-        assertEquals("SELECT 'it''s'", ps.buildSql());
+        assertEquals("SELECT {p1:String}", ps.buildSql());
+        assertEquals(List.of("--param_p1=it's"), ps.buildParamArgs());
     }
 
     @Test
     void buildSqlEscapesBackslashInString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setString(1, "back\\slash");
-        assertEquals("SELECT 'back\\\\slash'", ps.buildSql());
+        assertEquals("SELECT {p1:String}", ps.buildSql());
+        assertEquals(List.of("--param_p1=back\\slash"), ps.buildParamArgs());
     }
 
     @Test
@@ -96,7 +101,8 @@ class ClickHouseLocalPreparedStatementTest {
         ps.setInt(1, 1);
         ps.setString(2, "hello");
         ps.setDouble(3, 1.5);
-        assertEquals("INSERT INTO t (a, b, c) VALUES (1, 'hello', 1.5)", ps.buildSql());
+        assertEquals("INSERT INTO t (a, b, c) VALUES (1, {p2:String}, 1.5)", ps.buildSql());
+        assertEquals(List.of("--param_p2=hello"), ps.buildParamArgs());
     }
 
     @Test
@@ -115,10 +121,12 @@ class ClickHouseLocalPreparedStatementTest {
 
     @Test
     void clearParametersRemovesAllParams() throws SQLException {
-        var ps = prepare("SELECT ?");
+        var ps = prepare("SELECT ?, ?");
         ps.setInt(1, 1);
+        ps.setString(2, "hello");
         ps.clearParameters();
         assertThrows(SQLException.class, ps::buildSql);
+        assertEquals(List.of(), ps.buildParamArgs());
     }
 
     @Test
@@ -132,7 +140,8 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlWithObjectString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setObject(1, "world");
-        assertEquals("SELECT 'world'", ps.buildSql());
+        assertEquals("SELECT {p1:String}", ps.buildSql());
+        assertEquals(List.of("--param_p1=world"), ps.buildParamArgs());
     }
 
     @Test

@@ -26,6 +26,20 @@ public class ClickHouseLocalStatement implements Statement {
 
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
+        return executeQueryWithParams(sql, List.of());
+    }
+
+    @Override
+    public int executeUpdate(String sql) throws SQLException {
+        return executeUpdateWithParams(sql, List.of());
+    }
+
+    @Override
+    public boolean execute(String sql) throws SQLException {
+        return executeWithParams(sql, List.of());
+    }
+
+    protected ResultSet executeQueryWithParams(String sql, List<String> paramArgs) throws SQLException {
         checkClosed();
         List<String> cmd = new ArrayList<>();
         cmd.add(clickhouseLocalPath);
@@ -33,25 +47,24 @@ public class ClickHouseLocalStatement implements Statement {
         cmd.add(sql);
         cmd.add("--output-format");
         cmd.add("TabSeparatedWithNamesAndTypes");
+        cmd.addAll(paramArgs);
         String output = runProcess(cmd);
         lastResultSet = parseTabSeparatedOutput(output);
         updateCount = -1;
         return lastResultSet;
     }
 
-    @Override
-    public int executeUpdate(String sql) throws SQLException {
+    protected int executeUpdateWithParams(String sql, List<String> paramArgs) throws SQLException {
         checkClosed();
-        executeQuery(sql);
+        executeQueryWithParams(sql, paramArgs);
         lastResultSet = null;
         updateCount = 0;
         return 0;
     }
 
-    @Override
-    public boolean execute(String sql) throws SQLException {
+    protected boolean executeWithParams(String sql, List<String> paramArgs) throws SQLException {
         checkClosed();
-        executeQuery(sql);
+        executeQueryWithParams(sql, paramArgs);
         ClickHouseLocalResultSet rs = (ClickHouseLocalResultSet) lastResultSet;
         if (rs != null && rs.getColumnCount() > 0) {
             updateCount = -1;
