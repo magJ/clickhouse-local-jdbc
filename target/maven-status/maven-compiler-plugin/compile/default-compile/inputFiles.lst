@@ -1,7 +1,0 @@
-/home/runner/work/clickhouse-local-jdbc/clickhouse-local-jdbc/src/main/java/io/github/magj/clickhouselocaljdbc/ClickHouseLocalConnection.java
-/home/runner/work/clickhouse-local-jdbc/clickhouse-local-jdbc/src/main/java/io/github/magj/clickhouselocaljdbc/ClickHouseLocalDatabaseMetaData.java
-/home/runner/work/clickhouse-local-jdbc/clickhouse-local-jdbc/src/main/java/io/github/magj/clickhouselocaljdbc/ClickHouseLocalDriver.java
-/home/runner/work/clickhouse-local-jdbc/clickhouse-local-jdbc/src/main/java/io/github/magj/clickhouselocaljdbc/ClickHouseLocalPreparedStatement.java
-/home/runner/work/clickhouse-local-jdbc/clickhouse-local-jdbc/src/main/java/io/github/magj/clickhouselocaljdbc/ClickHouseLocalResultSet.java
-/home/runner/work/clickhouse-local-jdbc/clickhouse-local-jdbc/src/main/java/io/github/magj/clickhouselocaljdbc/ClickHouseLocalResultSetMetaData.java
-/home/runner/work/clickhouse-local-jdbc/clickhouse-local-jdbc/src/main/java/io/github/magj/clickhouselocaljdbc/ClickHouseLocalStatement.java
