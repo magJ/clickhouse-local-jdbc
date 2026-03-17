@@ -80,7 +80,7 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlEscapesSingleQuoteInString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setString(1, "it's");
-        assertEquals("SELECT 'it\\'s'", ps.buildSql());
+        assertEquals("SELECT 'it''s'", ps.buildSql());
     }
 
     @Test

@@ -116,7 +116,7 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
         if (x == null) {
             parameters.put(parameterIndex, "NULL");
         } else {
-            parameters.put(parameterIndex, "'" + x.replace("\\", "\\\\").replace("'", "\\'") + "'");
+            parameters.put(parameterIndex, "'" + x.replace("\\", "\\\\").replace("'", "''") + "'");
         }
     }
 
