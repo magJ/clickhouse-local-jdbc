@@ -20,9 +20,6 @@ testing {
     suites {
         val test by getting(JvmTestSuite::class) {
             useJUnitJupiter(junitVersion)
-            dependencies {
-                implementation("org.mockito:mockito-core:5.18.0")
-            }
         }
 
         val integrationTest by registering(JvmTestSuite::class) {
