@@ -144,6 +144,7 @@ public class ClickHouseLocalStatement implements Statement {
                     case 'n': sb.append('\n'); break;
                     case 'r': sb.append('\r'); break;
                     case '\\': sb.append('\\'); break;
+                    case '\'': sb.append('\''); break;
                     case '0': sb.append('\0'); break;
                     case 'b': sb.append('\b'); break;
                     case 'f': sb.append('\f'); break;

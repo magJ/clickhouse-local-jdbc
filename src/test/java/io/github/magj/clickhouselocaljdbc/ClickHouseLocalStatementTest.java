@@ -136,10 +136,11 @@ class ClickHouseLocalStatementTest {
     }
 
     @Test
-    void parseTabSeparatedOutputUnescapesBackslash() throws SQLException {
-        String output = "path\nString\nc:\\\\users\n";
+    void parseTabSeparatedOutputUnescapesSingleQuote() throws SQLException {
+        // ClickHouse TSV escapes single quotes as \' within String field values
+        String output = "val\nString\nit\\'s a test\n";
         ClickHouseLocalResultSet rs = statement.parseTabSeparatedOutput(output);
         assertTrue(rs.next());
-        assertEquals("c:\\users", rs.getString(1));
+        assertEquals("it's a test", rs.getString(1));
     }
 }
