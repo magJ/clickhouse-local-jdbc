@@ -13,6 +13,8 @@ jobs:
       contents: read
     env:
       GRADLE_OPTS: "-Dorg.gradle.welcome=never -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
     steps:
       - uses: actions/checkout@v6
 
@@ -31,33 +33,37 @@ jobs:
       - name: Run integration tests
         run: ./gradlew integrationTest -DclickhouseLocalPath=./clickhouse-bin/clickhouse-local
 
+      - name: Set version
+        id: version
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: echo "VERSION=1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Build jar
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: ./gradlew jar -Pversion=${{ steps.version.outputs.VERSION }}
+
+      - name: Upload jar
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar
+          path: build/libs/clickhouse-local-jdbc-${{ steps.version.outputs.VERSION }}.jar
+
   release:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      GRADLE_OPTS: "-Dorg.gradle.welcome=never -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
+      - name: Download jar
+        uses: actions/download-artifact@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Set version
-        id: version
-        run: echo "VERSION=1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
-
-      - name: Build jar
-        run: ./gradlew jar -Pversion=${{ steps.version.outputs.VERSION }}
+          name: jar
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.VERSION }}
-          name: v${{ steps.version.outputs.VERSION }}
-          files: build/libs/clickhouse-local-jdbc-${{ steps.version.outputs.VERSION }}.jar
+          tag_name: v${{ needs.test.outputs.version }}
+          name: v${{ needs.test.outputs.version }}
+          files: clickhouse-local-jdbc-${{ needs.test.outputs.version }}.jar
