@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -117,13 +116,19 @@ public class ClickHouseLocalPreparedStatement extends ClickHouseLocalStatement i
         if (x == null) {
             parameters.put(parameterIndex, "NULL");
         } else {
-            byte[] bytes = x.getBytes(StandardCharsets.UTF_8);
-            StringBuilder hex = new StringBuilder(bytes.length * 2);
-            for (byte b : bytes) {
-                hex.append(Character.forDigit((b >> 4) & 0xF, 16));
-                hex.append(Character.forDigit(b & 0xF, 16));
+            StringBuilder sb = new StringBuilder("'");
+            for (int i = 0; i < x.length(); i++) {
+                char c = x.charAt(i);
+                if (c == '\'') {
+                    sb.append("\\'");
+                } else if (c == '\\') {
+                    sb.append("\\\\");
+                } else {
+                    sb.append(c);
+                }
             }
-            parameters.put(parameterIndex, "unhex('" + hex + "')");
+            sb.append("'");
+            parameters.put(parameterIndex, sb.toString());
         }
     }
 

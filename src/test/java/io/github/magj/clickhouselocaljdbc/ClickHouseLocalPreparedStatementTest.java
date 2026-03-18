@@ -27,7 +27,7 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlWithStringParameter() throws SQLException {
         var ps = prepare("SELECT * FROM t WHERE name = ?");
         ps.setString(1, "Alice");
-        assertEquals("SELECT * FROM t WHERE name = unhex('416c696365')", ps.buildSql());
+        assertEquals("SELECT * FROM t WHERE name = 'Alice'", ps.buildSql());
     }
 
     @Test
@@ -80,14 +80,14 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlEscapesSingleQuoteInString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setString(1, "it's");
-        assertEquals("SELECT unhex('69742773')", ps.buildSql());
+        assertEquals("SELECT 'it\\'s'", ps.buildSql());
     }
 
     @Test
     void buildSqlEscapesBackslashInString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setString(1, "back\\slash");
-        assertEquals("SELECT unhex('6261636b5c736c617368')", ps.buildSql());
+        assertEquals("SELECT 'back\\\\slash'", ps.buildSql());
     }
 
     @Test
@@ -96,7 +96,7 @@ class ClickHouseLocalPreparedStatementTest {
         ps.setInt(1, 1);
         ps.setString(2, "hello");
         ps.setDouble(3, 1.5);
-        assertEquals("INSERT INTO t (a, b, c) VALUES (1, unhex('68656c6c6f'), 1.5)", ps.buildSql());
+        assertEquals("INSERT INTO t (a, b, c) VALUES (1, 'hello', 1.5)", ps.buildSql());
     }
 
     @Test
@@ -133,7 +133,7 @@ class ClickHouseLocalPreparedStatementTest {
     void buildSqlWithObjectString() throws SQLException {
         var ps = prepare("SELECT ?");
         ps.setObject(1, "world");
-        assertEquals("SELECT unhex('776f726c64')", ps.buildSql());
+        assertEquals("SELECT 'world'", ps.buildSql());
     }
 
     @Test
