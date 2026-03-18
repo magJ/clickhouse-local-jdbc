@@ -101,6 +101,24 @@ class ClickHouseLocalIntegrationTest {
     }
 
     @Test
+    void selectMultipleColumnsWithTabsAndNewlines() throws SQLException {
+        // Verifies TSV parsing: escaped \t in a column value must not shift subsequent
+        // column values, and escaped \n in a column value must not split the row.
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT toInt32(1) AS id, " +
+                     "concat('col1', char(9), 'col2') AS with_tab, " +
+                     "concat('line1', char(10), 'line2') AS with_newline")) {
+            assertTrue(rs.next());
+            assertEquals(1, rs.getInt("id"));
+            assertEquals("col1\tcol2", rs.getString("with_tab"));
+            assertEquals("line1\nline2", rs.getString("with_newline"));
+            assertFalse(rs.next());
+        }
+    }
+
+    @Test
     void selectNumericTypes() throws SQLException {
         try (Connection conn = connect();
              Statement stmt = conn.createStatement();
