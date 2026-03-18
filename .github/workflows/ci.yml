@@ -26,14 +26,7 @@ jobs:
         run: ./gradlew test
 
       - name: Install ClickHouse
-        env:
-          CLICKHOUSE_VERSION: "26.2.4.23"
-        run: |
-          curl -fsSL "https://github.com/ClickHouse/ClickHouse/releases/download/v${CLICKHOUSE_VERSION}-stable/clickhouse-common-static_${CLICKHOUSE_VERSION}_amd64.deb" \
-            -o /tmp/clickhouse.deb
-          sudo dpkg -i /tmp/clickhouse.deb
-          sudo ln -sf /usr/bin/clickhouse /usr/local/bin/clickhouse-local
-          clickhouse-local --version
+        run: ./install-clickhouse.sh
 
       - name: Run integration tests
-        run: ./gradlew integrationTest
+        run: ./gradlew integrationTest -DclickhouseLocalPath=./clickhouse-bin/clickhouse-local
